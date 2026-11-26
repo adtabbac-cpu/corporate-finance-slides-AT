@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>תיק של שתי מניות – התפלגות נורמלית</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>:root{--bg:#0d1220;--card:#141b2e;--card2:#1a2339;--ink:#eceef3;--mute:#9aa5bd;--line:rgba(255,255,255,.09);--blue:#5aa9ff;--orange:#ffa94d;--violet:#c3a6ff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+#deck{display:block;position:relative;height:100vh;overflow:hidden}
+.slide{position:absolute;inset:0;width:100%;height:100vh;padding:5.5vh 5vw 10vh;display:grid;grid-template-columns:minmax(270px,34%) minmax(0,1fr);gap:3.2vw;align-items:stretch;overflow-y:auto;opacity:0;visibility:hidden;transition:opacity .6s ease,visibility 0s linear .6s}
+.slide.active{opacity:1;visibility:visible;transition:opacity .6s ease,visibility 0s}
+.slide.solo{grid-template-columns:1fr;align-content:center}
+.slide.title{background:radial-gradient(1200px 700px at 78% 30%,#1b2a52 0,transparent 60%),var(--bg);grid-template-columns:1fr;align-content:center}
+.kicker{font:500 12px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--orange);margin:0 0 14px}
+h1,h2{font-family:'Newsreader',Georgia,serif;font-weight:500;letter-spacing:-.01em;margin:0 0 .5em;line-height:1.08}
+h1{font-size:clamp(38px,6.5vw,100px)} h2{font-size:clamp(28px,3.3vw,50px)}
+h1 em,h2 em{color:var(--orange);font-style:italic}
+.lead{font-size:clamp(17px,1.5vw,24px);line-height:1.5;color:#c8cedd;max-width:44ch}
+.title .lead{max-width:56ch;font-size:clamp(18px,1.8vw,28px)}
+p,li{font-size:clamp(14px,1.08vw,18px);line-height:1.55;color:#c3cadb}
+b{color:var(--ink);font-weight:600}
+.txt{display:flex;flex-direction:column;min-height:0}
+.math{font-family:'Newsreader',serif;font-size:clamp(20px,1.9vw,30px);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:12px 0;color:var(--ink);line-height:1.5}
+.note{font-size:13px;color:var(--mute);border-left:2px solid var(--orange);padding-left:12px;margin-top:auto}
+.byline{font:500 14px 'JetBrains Mono',monospace;color:var(--mute);margin-top:22px}
+.sim{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px 12px;min-height:0;min-width:0}
+.sim .tag{font:500 11px/1 'JetBrains Mono',monospace;letter-spacing:.12em;color:var(--blue);text-transform:uppercase;margin-bottom:8px}
+.sim canvas{width:100%;flex:1;min-height:200px;display:block;touch-action:none}
+.sim canvas.small{flex:0 0 24%;min-height:80px;margin-top:8px}
+.ctls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 18px;margin-top:10px}
+.ctl{display:flex;flex-direction:column;font-size:12px;color:var(--mute)}
+.ctl .row{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace}
+.ctl .row span:last-child{color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--orange);margin:4px 0}
+.btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:500 13px 'Inter',sans-serif;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:var(--orange)} button.on{background:var(--orange);color:#1a1205;border-color:var(--orange)}
+.read{font:12.5px/1.6 'JetBrains Mono',monospace;color:var(--mute);margin-top:8px;min-height:3.2em}
+.read b{color:var(--orange);font-weight:500}
+.read table{border-collapse:collapse;margin-top:4px;width:100%}
+.read td,.read th{padding:3px 8px 3px 0;text-align:start;font-weight:400;font-size:12px}
+.read th{color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.warn{color:var(--orange);background:rgba(255,169,77,.08);border:1px solid rgba(255,169,77,.35);border-radius:8px;padding:6px 10px;margin-top:6px;font-size:12.5px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.card .big{font:500 clamp(30px,3.2vw,52px)/1 'Newsreader',serif;color:var(--orange);margin-bottom:8px}
+.card h3{margin:0 0 6px;font-size:15px;font-weight:600;color:var(--ink)} .card p{margin:0;font-size:14px}
+.steps{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.step{flex:1;min-width:150px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:13px;color:#c3cadb}
+.step b{display:block;color:var(--orange);font:500 11px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--mute);margin:0 0 6px;flex-wrap:wrap}
+.legend i{display:inline-block;width:14px;height:3px;margin-inline-end:6px;vertical-align:middle;border-radius:2px}
+.chip{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:6px}
+.tbl{width:100%;border-collapse:collapse;margin-top:8px}
+.tbl td,.tbl th{padding:8px 10px;border-bottom:1px solid var(--line);font-size:14px;text-align:start;color:#c3cadb}
+.tbl th{color:var(--mute);font-weight:500;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.eq{display:flex;align-items:center;justify-content:center;gap:22px;margin:22px 0;flex-wrap:wrap}
+.eq .box{border:2px solid;border-radius:14px;padding:18px 26px;font-size:clamp(17px,1.7vw,26px);text-align:center;line-height:1.45;min-width:240px}
+.eq .op{width:46px;height:46px;border-radius:50%;border:1.5px solid var(--mute);display:flex;align-items:center;justify-content:center;font-size:26px}
+.bigmath{direction:ltr;text-align:center;font-family:'Newsreader',serif;font-size:clamp(30px,3.6vw,56px);border:2px solid;border-radius:14px;padding:12px 34px;margin:10px auto;width:fit-content}
+#nav{position:fixed;left:0;right:0;bottom:0;height:7vh;min-height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 5vw;pointer-events:none;background:linear-gradient(transparent,var(--bg) 70%);direction:ltr}
+#nav>*{pointer-events:auto}
+#dots{display:flex;gap:7px}
+#dots span{width:7px;height:7px;border-radius:50%;background:#33405e;cursor:pointer}
+#dots span.a{background:var(--orange);transform:scale(1.35)}
+#count{font:12px 'JetBrains Mono',monospace;color:var(--mute);min-width:60px;text-align:center}
+a{color:var(--blue)}
+@media (max-width:900px){.slide{grid-template-columns:1fr;gap:18px}.sim canvas{min-height:260px;flex:none;height:300px}}
+html{direction:rtl} body{font-family:'Heebo',system-ui,sans-serif}
+h1,h2,.math,.bigmath,.card .big{font-family:'Frank Ruhl Libre',Georgia,serif}
+h1 em,h2 em{font-style:normal}
+.kicker,.sim .tag,.ctl,.ctl .row,button{font-family:'Heebo',sans-serif;letter-spacing:.04em}
+.math{direction:ltr;text-align:center}
+.note{border-left:none;border-right:2px solid var(--orange);padding-left:0;padding-right:12px}
+.read{font-family:'Heebo','JetBrains Mono',sans-serif;font-size:13.5px}
+.ctl .row span:last-child{font-family:'JetBrains Mono',monospace;direction:ltr}
+input[type=range],canvas{direction:ltr}
+.ltr{direction:ltr;unicode-bidi:isolate;font-family:'JetBrains Mono',monospace}
+.read table td:last-child{font-family:'JetBrains Mono',monospace}
+
+.read table td,.read table th{padding:2px 10px 2px 0}
+.read .ltr{color:inherit}
+.tbl td .ltr{font-size:13px}
+.sim{min-height:62vh}
+.math{font-size:clamp(17px,1.45vw,23px)}
+.ltr b{font-family:inherit}
+</style></head><body>
+<main id="deck">
+<section class="slide title"><div>
+  <p class="kicker">מימון חברות · מצגת אינטראקטיבית · 16 שקופיות</p>
+  <h1>תיק השקעות<br>של <em>שתי מניות</em></h1>
+  <p class="lead">תשואות בהתפלגות נורמלית: במקום ארבעה מצבי עולם – אינסוף. כל גרף כאן מחושב בזמן אמת; גררו את המחוונים ואת הנקודות, והשינוי יופיע בכל השקופיות.</p>
+  <p class="byline">אברהם טבח · אוניברסיטת תל אביב</p>
+</div></section>
+
+<section class="slide">
+  <div class="txt">
+    <p class="kicker">1 · דוגמא</p>
+    <h2>אינסוף <em>מצבי עולם</em></h2>
+    <p>בדוגמא הקודמת היו ארבעה מצבי עולם בלבד (מיתון, האטה, נורמלי, צמיחה). כעת התשואה של כל מניה בשנה הבאה מתפלגת <b>נורמלית</b>:</p>
+    <div class="math">R<sub>A</sub> ~ N(17.5%, (25%)²)<br>R<sub>B</sub> ~ N(5.5%, (12%)²)</div>
+    <p>מניה A – ״היי־טק״: תוחלת גבוהה, פעמון רחב. מניה B – ״לאו־טק״: תוחלת נמוכה, פעמון צר. התשואות מתפלגות <b>יחד</b> נורמלית, עם מקדם מתאם <span class="ltr">ρ<sub>AB</sub> = −0.2</span>.</p>
+    <p class="note">התוחלת קובעת את מרכז הפעמון, וסטיית התקן את רוחבו. נסו להגדיל את סטיית התקן של B.</p>
+  </div>
+  <div class="sim" data-sim="dist" data-stage="1"></div>
+</section>
+
+<section class="slide">
+  <div class="txt">
+    <p class="kicker">2 · קריאת ההתפלגות</p>
+    <h2>מה אומרת <em>ההתפלגות?</em></h2>
+    <p>כ־68% מההסתברות נמצאת במרחק סטיית תקן אחת מהתוחלת, וכ־95% במרחק של 1.96 סטיות תקן.</p>
+    <div class="math">P(R<sub>A</sub>&lt;0) = Φ(−17.5/25) = Φ(−0.70) = 24.2%<br>P(R<sub>B</sub>&lt;0) = Φ(−5.5/12) = Φ(−0.46) = 32.3%</div>
+    <p>מניה B פחות מסוכנת, אבל ההסתברות להפסד בה <b>גבוהה יותר</b> – התוחלת שלה קרובה לאפס. סטיית תקן מודדת פיזור סביב התוחלת, לא הסתברות להפסד.</p>
+    <p class="note">מצאו פרמטרים שבהם המניה עם סטיית התקן הקטנה יותר גם מפסידה בהסתברות קטנה יותר.</p>
+  </div>
+  <div class="sim" data-sim="dist" data-stage="2"></div>
+</section>
+
+<section class="slide solo"><div>
+  <p class="kicker">3 · מסכום לאינטגרל</p>
+  <h2>תוחלת ושונות – <em>אותם מושגים</em></h2>
+  <p>במקרה הבדיד שקללנו כל מצב עולם בהסתברות שלו. במקרה הרציף משקללים בפונקציית הצפיפות f(r). בהתפלגות נורמלית אין צורך לחשב: μ ו־σ² של ההתפלגות הם התוחלת והשונות.</p>
+  <table class="tbl" style="max-width:900px">
+    <tr><th></th><th>בדיד</th><th>רציף (נורמלי)</th></tr>
+    <tr><td>תוחלת</td><td><span class="ltr">E(R) = Σ p<sub>s</sub>·r<sub>s</sub></span></td><td><span class="ltr">E(R) = ∫ r·f(r) dr = μ</span></td></tr>
+    <tr><td>שונות</td><td><span class="ltr">Var(R) = Σ p<sub>s</sub>(r<sub>s</sub> − μ)²</span></td><td><span class="ltr">Var(R) = ∫ (r − μ)² f(r) dr = σ²</span></td></tr>
+  </table>
+  <div class="cards" style="max-width:900px">
+    <div class="card"><div class="big">17.5% · 25%</div><h3>מניה A (היי־טק)</h3><p>תוחלת וסטיית תקן. שונות 625 (אחוזים בריבוע).</p></div>
+    <div class="card"><div class="big">5.5% · 12%</div><h3>מניה B (לאו־טק)</h3><p>תוחלת וסטיית תקן. שונות 144.</p></div>
+    <div class="card"><div class="big"><span class="ltr">−0.2</span></div><h3>מקדם מתאם</h3><p>שונות משותפת σ<sub>AB</sub> = ρσ<sub>A</sub>σ<sub>B</sub> = <span class="ltr">−60</span>. חמשת הפרמטרים קובעים את ההתפלגות המשותפת במלואה.</p></div>
+  </div>
+</div></section>
+
+<section class="slide">
+  <div class="txt">
+    <p class="kicker">4 · תיק השקעות</p>
+    <h2>ענן של <em>מצבי עולם</em></h2>
+    <p>ברשותכם 100 ש״ח. משקיעים 50 ש״ח ב־A ו־50 ש״ח ב־B:</p>
+    <div class="math">50(1+R<sub>A</sub>) + 50(1+R<sub>B</sub>) = 100(1 + R<sub>P</sub>)<br>R<sub>P</sub> = 0.5R<sub>A</sub> + 0.5R<sub>B</sub></div>
+    <p>כל נקודה היא מצב עולם אפשרי – זוג תשואות (R<sub>A</sub>, R<sub>B</sub>). בדוגמא הבדידה היו כאן ארבע נקודות. הענן נוטה מעט כלפי מטה: ρ = <span class="ltr">−0.2</span>.</p>
+    <p class="note">שנו את ρ וראו איך הענן מסתובב ומתכווץ; שימו לב שמקדם המתאם במדגם רועש.</p>
+  </div>
+  <div class="sim" data-sim="cloud" data-stage="1"></div>
+</section>
+
+<section class="slide">
+  <div class="txt">
+    <p class="kicker">5 · תכונה מרכזית</p>
+    <h2>צירוף לינארי הוא <em>נורמלי</em></h2>
+    <p>צירוף לינארי של משתנים המתפלגים <b>יחד</b> נורמלית מתפלג גם הוא נורמלית:</p>
+    <div class="math">R<sub>P</sub> = f<sub>A</sub>R<sub>A</sub> + f<sub>B</sub>R<sub>B</sub> ~ N(E(R<sub>P</sub>), Var(R<sub>P</sub>))</div>
+    <p>לכן כדי לדעת <b>הכל</b> על התשואה של התיק מספיק לחשב שני מספרים: תוחלת ושונות. זו אחת ההצדקות להתמקד בהם בתורת התיקים של מרקוביץ.</p>
+    <p class="note">ההיסטוגרמה היא R<sub>P</sub> בכל מצב עולם שהוגרל; העקומה – הנורמלית התאורטית. הגדילו את המדגם וראו את ההתכנסות.</p>
+  </div>
+  <div class="sim" data-sim="lincomb"></div>
+</section>
+
+<section class="slide">
+  <div class="txt">
+    <p class="kicker">6 · תשואה</p>
+    <h2>ממוצע <em>משוקלל</em></h2>
+    <p>התשואה הצפויה של התיק שווה לממוצע המשוקלל של התשואות הצפויות של המניות – לכל התפלגות, בדידה או רציפה:</p>
+    <div class="math">E(R<sub>P</sub>) = Σ f<sub>i</sub>·E(R<sub>i</sub>)</div>
+    <p>50/50: <b>11.5%</b> · 70/30: <b>13.9%</b> · 30/70: <b>9.1%</b>. התוחלת היא קומבינציה לינארית – ולכן קו ישר.</p>
+    <p class="note">גררו את הנקודה הסגולה לאורך הקו.</p>
+  </div>
+  <div class="sim" data-sim="weights" data-stage="1"></div>
+</section>
+
+<section class="slide">
+  <div class="txt">
+    <p class="kicker">7 · שונות</p>
+    <h2>שונות של <em>תיק השקעות</em></h2>
+    <div class="math">Var(R<sub>P</sub>) = f<sub>A</sub>²σ<sub>A</sub>² + 2f<sub>A</sub>f<sub>B</sub>σ<sub>AB</sub> + f<sub>B</sub>²σ<sub>B</sub>²<br>σ<sub>AB</sub> = ρ<sub>AB</sub>σ<sub>A</sub>σ<sub>B</sub> = −60</div>
+    <p>בתיק 50/50: שונות 162.25, סטיית תקן <b>12.74%</b>, ולכן <span class="ltr">R<sub>P</sub> ~ N(11.5%, (12.74%)²)</span>. זה <b>פחות</b> מהממוצע המשוקלל של סטיות התקן: <span class="ltr">0.5·25 + 0.5·12 = 18.5</span>.</p>
+    <p class="note">הפעמון של התיק יושב בין שתי המניות וצר יותר מממוצע רוחבן. בתיק 30/70 הוא צר אפילו מזה של B.</p>
+  </div>
+  <div class="sim" data-sim="portfolio" data-stage="1"></div>
+</section>
+
+<section class="slide">
+  <div class="txt">
+    <p class="kicker">8 · הסתברות להפסד</p>
+    <h2>התיק מפסיד <em>פחות</em> משתיהן</h2>
+    <div class="math">P(R<sub>P</sub>&lt;0) = Φ(−11.5/12.74) = Φ(−0.903) = 18.3%</div>
+    <p>A: 24.2%, B: 32.3%, התיק: <b>18.3%</b>. ההסתברות להפסד בתיק נמוכה מזו של <b>כל אחת</b> מהמניות – דבר שקשה לראות עם ארבעה מצבי עולם בלבד.</p>
+    <p class="note">שנו את ρ ל־1: היתרון מצטמצם. שנו ל־<span class="ltr">−1</span> וחפשו משקל שבו ההסתברות להפסד כמעט אפס.</p>
+  </div>
+  <div class="sim" data-sim="portfolio" data-stage="2"></div>
+</section>
+
+<section class="slide">
+  <div class="txt">
+    <p class="kicker">9 · מדוע?</p>
+    <h2>שונות <em>משותפת!</em></h2>
+    <p>כאשר מניה אחת יורדת, השנייה עשויה לעלות. באזורים המוצללים ההפסד במניה אחת ״מקוזז״ ברווח בשנייה.</p>
+    <p>כל עוד הקורלציה אינה מושלמת (ρ &lt; 1), סטיית התקן של התיק קטנה מהממוצע המשוקלל של סטיות התקן. זה <b>ביזור</b> – אל תשימו את כל הביצים בסל אחד.</p>
+    <p class="note">ככל שהמתאם נמוך יותר, יותר נקודות נופלות באזורים המוצללים. השוו את השיעור במדגם לתאוריה.</p>
+  </div>
+  <div class="sim" data-sim="cloud" data-stage="2"></div>
+</section>
+
+<section class="slide">
+  <div class="txt">
+    <p class="kicker">10 · הערסל</p>
+    <h2>סטיית תקן לפי <em>משקל</em></h2>
+    <p>העקומה נמצאת מתחת לקו המקווקו (הממוצע המשוקלל) בכל נקודה פנימית. הפער הירוק הוא הרווח מביזור.</p>
+    <div class="math">f<sub>A</sub>* = (σ<sub>B</sub>² − σ<sub>AB</sub>) / (σ<sub>A</sub>² + σ<sub>B</sub>² − 2σ<sub>AB</sub>) = 204/889 = 0.2295</div>
+    <p>תיק השונות המינימלית: סטיית תקן <b>9.86%</b>, תוחלת 8.25%. בתיק 30/70 סטיית התקן (10.08%) קטנה מזו של B (12%) – והתוחלת גבוהה יותר.</p>
+    <p class="note">גררו לאורך הציר; הזיזו את ρ ל־1 וראו את הערסל נמתח לקו ישר.</p>
+  </div>
+  <div class="sim" data-sim="weights" data-stage="2"></div>
+</section>
+
+<section class="slide">
+  <div class="txt">
+    <p class="kicker">11 · Portfolio Analysis</p>
+    <h2>המרחב <em>סטיית תקן–תוחלת</em></h2>
+    <p>כל נקודה על העקומה היא תיק השקעות (הנקודות הלבנות – בקפיצות של 10%).</p>
+    <p>החלק העליון, מעל תיק השונות המינימלית, הוא <b>החזית היעילה</b>. תיקים בחלק התחתון נשלטים: יש תיק עם אותה סטיית תקן ותשואה גבוהה יותר.</p>
+    <p class="note">לחצו על העקומה כדי לבחור תיק; נסו להפוך את תוחלות המניות בשקופית 2 וחזרו לכאן.</p>
+  </div>
+  <div class="sim" data-sim="frontier" data-stage="1"></div>
+</section>
+
+<section class="slide">
+  <div class="txt">
+    <p class="kicker">12 · מקדם המתאם</p>
+    <h2>מ־1 עד <em><span class="ltr">−1</span></em></h2>
+    <p>מחזיקים את התוחלות וסטיות התקן קבועות ומשנים רק את ρ. בהתפלגות נורמלית זה פשוט במיוחד: ההתפלגות של כל מניה לבד לא משתנה, רק ״צורת הענן״.</p>
+    <p>ρ = 1: קו ישר – אין תועלת מביזור. ρ = <span class="ltr">−1</span>: העקומה נוגעת בציר האנכי – תיק <b>חסר סיכון</b> ב־f<sub>A</sub> = 12/37 = 0.324, עם תשואה 9.39%.</p>
+    <p class="note">הפעילו את ההנפשה; העקומות הקודמות נשארות באפור.</p>
+  </div>
+  <div class="sim" data-sim="frontier" data-stage="2"></div>
+</section>
+
+<section class="slide">
+  <div class="txt">
+    <p class="kicker">13 · מעבר למצגת</p>
+    <h2>האם התיק יכול להפסיד <em>יותר?</em></h2>
+    <p>P(R<sub>P</sub>&lt;0) = Φ(−E/σ), ולכן ההסתברות להפסד נקבעת כולה ביחס <b class="ltr">E/σ</b>. התיק שממזער אותה הוא התיק עם <span class="ltr">E/σ</span> מקסימלי – ״תיק שארפ״ עם ריבית אפס.</p>
+    <p>כל עוד תוחלת התיק חיובית, ההסתברות להפסד בו <b>לעולם אינה עולה</b> על זו של המניה הגרועה מבין השתיים (נבדק ב־20,000 צירופי פרמטרים אקראיים).</p>
+    <p class="note">הורידו את התוחלות מתחת לאפס כדי למצוא את המקרה שבו התיק גרוע משתי המניות.</p>
+  </div>
+  <div class="sim" data-sim="lossmap"></div>
+</section>
+
+<section class="slide">
+  <div class="txt">
+    <p class="kicker">14 · מעבר למצגת</p>
+    <h2>יותר מניות, <em>פחות סיכון</em> – עד גבול</h2>
+    <p>תיק שווה משקלים של n מניות, לכל אחת סטיית תקן σ, ומקדם מתאם ρ בין כל זוג:</p>
+    <div class="math">Var(R<sub>P</sub>) = σ²/n + (1 − 1/n)·ρσ²</div>
+    <p>הרכיב הראשון נעלם כש־n גדל. השני נשאר: <b>σ√ρ</b> הוא הסיכון שלא ניתן לבזר (סיכון שיטתי).</p>
+    <p class="note">כש־ρ = 0 הסיכון יורד לאפס; כש־ρ = 1 ביזור לא עוזר כלל.</p>
+  </div>
+  <div class="sim" data-sim="nstocks"></div>
+</section>
+
+<section class="slide solo"><div>
+  <p class="kicker">15 · סיכום</p>
+  <h2>מה <em>לקחנו</em></h2>
+  <table class="tbl" style="max-width:1050px">
+    <tr><th>רעיון</th><th>בדוגמא (50/50, ρ = <span class="ltr">−0.2</span>)</th></tr>
+    <tr><td>תשואת תיק בהתפלגות נורמלית משותפת מתפלגת נורמלית – תוחלת ושונות מתארות אותה במלואה</td><td><span class="ltr">R<sub>P</sub> ~ N(11.5%, 12.74%²)</span></td></tr>
+    <tr><td>התוחלת היא ממוצע משוקלל – קו ישר במשקל</td><td><span class="ltr">11.5% = 0.5·17.5 + 0.5·5.5</span></td></tr>
+    <tr><td>סטיית התקן קטנה מהממוצע המשוקלל כל עוד ρ &lt; 1 – בזכות השונות המשותפת</td><td><span class="ltr">12.74% &lt; 18.5%</span></td></tr>
+    <tr><td>תיק השונות המינימלית; מעליו – החזית היעילה</td><td><span class="ltr">f<sub>A</sub>* = 0.2295, σ = 9.86%, E = 8.25%</span></td></tr>
+    <tr><td>ההסתברות להפסד בתיק נמוכה מזו של כל אחת מהמניות</td><td><span class="ltr">18.3% &lt; 24.2%, 32.3%</span></td></tr>
+    <tr><td>ρ = <span class="ltr">−1</span> מאפשר תיק חסר סיכון</td><td><span class="ltr">f<sub>A</sub> = 12/37</span>, תשואה 9.39%</td></tr>
+    <tr><td>עם הרבה מניות נשאר רק הסיכון השיטתי</td><td>σ√ρ</td></tr>
+  </table>
+  <p class="byline">מבוסס על ״תיק השקעות של שתי מניות – תשואות בהתפלגות נורמלית״, א. טבח, מימון חברות.</p>
+</div></section>
+</main>
+<div id="nav"><button id="prev">←</button><div id="dots"></div><div id="count"></div><button id="next">→</button></div>
+
+<script>
+const TAU = Math.PI * 2;
+const $ = (s, r = document) => r.querySelector(s);
+const C = { blue: '#5aa9ff', orange: '#ffa94d', violet: '#c3a6ff', green: '#4fd1a1', red: '#ff7a7a', grey: '#7d8aa6', ink: '#eceef3', mute: '#9aa5bd', grid: 'rgba(255,255,255,.08)' };
+const fmtN = v => { const a = Math.abs(v); return a >= 1e6 ? (v / 1e6) + 'M' : a >= 1e4 ? (v / 1e3) + 'k' : String(+v.toFixed(6)); };
+const f2 = v => (Math.abs(v) < 5e-3 ? 0 : v).toFixed(2), f3 = v => (Math.abs(v) < 5e-4 ? 0 : v).toFixed(3); // avoid "-0.000"
+function ticks(a, b, n = 6) { const raw = (b - a) / n, p = 10 ** Math.floor(Math.log10(raw)), f = raw / p, st = (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p, out = []; for (let v = Math.ceil(a / st - 1e-9) * st; v <= b + 1e-9; v += st) out.push(+v.toPrecision(12)); return out; }
+function slider(parent, label, min, max, step, val, fmt, cb) {
+  const d = document.createElement('div'); d.className = 'ctl';
+  d.innerHTML = `<div class="row"><span>${label}</span><span></span></div><input type="range" min="${min}" max="${max}" step="${step}" value="${val}">`; parent.appendChild(d);
+  const inp = d.querySelector('input'), out = d.querySelectorAll('span')[1], upd = () => { out.textContent = fmt(+inp.value); };
+  inp.addEventListener('input', () => { upd(); cb(); }); upd();
+  return { get v() { return +inp.value; }, set(v) { inp.value = v; upd(); } };
+}
+function button(parent, label, cb) { const b = document.createElement('button'); b.textContent = label; b.onclick = () => cb(b); parent.appendChild(b); return b; }
+class Plot {
+  constructor(cv, m = {}) { this.cv = cv; this.m = Object.assign({ l: 52, r: 14, t: 10, b: 30 }, m); this.fit(); }
+  fit() { const r = this.cv.getBoundingClientRect(), d = window.devicePixelRatio || 1, w = Math.max(40, Math.round(r.width)), h = Math.max(40, Math.round(r.height)); if (this.cv.width !== w * d || this.cv.height !== h * d) { this.cv.width = w * d; this.cv.height = h * d; } this.g = this.cv.getContext('2d'); this.g.setTransform(d, 0, 0, d, 0, 0); this.w = w; this.h = h; }
+  clear() { this.fit(); this.g.clearRect(0, 0, this.w, this.h); }
+  range(x0, x1, y0, y1) { Object.assign(this, { x0, x1, y0, y1 }); }
+  X(x) { return this.m.l + (x - this.x0) / (this.x1 - this.x0) * (this.w - this.m.l - this.m.r); }
+  Y(y) { return this.h - this.m.b - (y - this.y0) / (this.y1 - this.y0) * (this.h - this.m.t - this.m.b); }
+  grid(xt, yt, fx = fmtN, fy = fmtN, xl = '', yl = '') {
+    const g = this.g; g.font = '11px JetBrains Mono, monospace'; g.lineWidth = 1; g.strokeStyle = C.grid; g.fillStyle = C.mute; g.textAlign = 'center'; g.textBaseline = 'top';
+    for (const v of xt) { const x = Math.round(this.X(v)) + .5; g.beginPath(); g.moveTo(x, this.m.t); g.lineTo(x, this.h - this.m.b); g.stroke(); g.fillText(fx(v), x, this.h - this.m.b + 6); }
+    g.textAlign = 'right'; g.textBaseline = 'middle';
+    for (const v of yt) { const y = Math.round(this.Y(v)) + .5; g.beginPath(); g.moveTo(this.m.l, y); g.lineTo(this.w - this.m.r, y); g.stroke(); g.fillText(fy(v), this.m.l - 6, y); }
+    g.textBaseline = 'bottom'; if (xl) g.fillText(xl, this.w - this.m.r, this.h - 2);
+    if (yl) { g.save(); g.translate(11, this.m.t + 4); g.rotate(-Math.PI / 2); g.textBaseline = 'top'; g.fillText(yl, 0, -4); g.restore(); }
+  }
+  clipBegin() { const g = this.g; g.save(); g.beginPath(); g.rect(this.m.l, this.m.t, this.w - this.m.l - this.m.r, this.h - this.m.t - this.m.b); g.clip(); }
+  clipEnd() { this.g.restore(); }
+  curve(fn, a, b, n, color, lw = 2, dash = []) { const g = this.g; this.clipBegin(); g.strokeStyle = color; g.lineWidth = lw; g.setLineDash(dash); g.beginPath(); for (let i = 0; i <= n; i++) { const x = a + (b - a) * i / n, y = fn(x); i ? g.lineTo(this.X(x), this.Y(y)) : g.moveTo(this.X(x), this.Y(y)); } g.stroke(); this.clipEnd(); }
+}
+function html(root, tag, legend, extra = '') { root.innerHTML = `<div class="tag">${tag}</div>${legend ? `<div class="legend">${legend}</div>` : ''}<canvas></canvas>${extra}<div class="ctls"></div><div class="read"></div>`; return { cv: $('canvas', root), ctl: $('.ctls', root), rd: $('.read', root) }; }
+const L = (c, t) => `<span><i style="background:${c}"></i>${t}</span>`;
+const SIMS = {};
+
+const PS={muA:17.5,sA:25,muB:5.5,sB:12,rho:-0.2,f:0.5}; const DEF=Object.assign({},PS);
+function erf(x){const s=Math.sign(x);x=Math.abs(x);const t=1/(1+0.3275911*x);const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y;}
+const Phi=z=>0.5*(1+erf(z/Math.SQRT2));
+const pdf=(x,m,s)=>Math.exp(-0.5*((x-m)/s)**2)/(s*Math.sqrt(2*Math.PI));
+function port(f,p=PS){const cov=p.rho*p.sA*p.sB,mu=f*p.muA+(1-f)*p.muB,v=f*f*p.sA**2+2*f*(1-f)*cov+(1-f)**2*p.sB**2;return{mu,v,sd:Math.sqrt(Math.max(v,0)),cov};}
+function ploss(mu,sd){return sd>1e-9?Phi(-mu/sd):(mu<0?1:mu>0?0:0.5);}
+function fmin(p=PS){const cov=p.rho*p.sA*p.sB,d=p.sA**2+p.sB**2-2*cov;if(d<1e-12)return 0.5;return Math.min(1,Math.max(0,(p.sB**2-cov)/d));}
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function draws(n,seed,p=PS){const r=mulberry(seed),A=new Float64Array(n),B=new Float64Array(n),q=Math.sqrt(Math.max(0,1-p.rho**2));for(let i=0;i<n;i++){const u=Math.max(r(),1e-12),v=r(),R=Math.sqrt(-2*Math.log(u)),z1=R*Math.cos(2*Math.PI*v),z2=R*Math.sin(2*Math.PI*v);A[i]=p.muA+p.sA*z1;B[i]=p.muB+p.sB*(p.rho*z1+q*z2);}return{A,B};}
+// P(A<0,B<0) for bivariate normal, Simpson integral
+function pBothNeg(p=PS){const za=-p.muA/p.sA,zb=-p.muB/p.sB,r=Math.max(-0.9999,Math.min(0.9999,p.rho)),q=Math.sqrt(1-r*r),lo=-9,hi=Math.min(za,9);if(hi<=lo)return 0;const n=2000,h=(hi-lo)/n;let s=0;for(let i=0;i<=n;i++){const z=lo+i*h,w=i==0||i==n?1:i%2?4:2;s+=w*pdf(z,0,1)*Phi((zb-r*z)/q);}return s*h/3;}
+function pOpposite(p=PS){const a=Phi(-p.muA/p.sA),b=Phi(-p.muB/p.sB);return a+b-2*pBothNeg(p);}
+if(typeof module!=='undefined')module.exports={PS,port,ploss,fmin,Phi,draws,pOpposite,pBothNeg};
+
+// ---------- shared state & UI glue ----------
+const PSYNC = [], PRED = [];
+function syncAll() { PSYNC.forEach(f => f()); PRED.forEach(f => f()); }
+function setPS(k, v) { PS[k] = v; syncAll(); }
+function resetPS() { Object.assign(PS, DEF); syncAll(); }
+const pct = v => f1(v) + '%';
+const f1 = v => (Math.abs(v) < 0.05 ? 0 : v).toFixed(1);
+const N = (v, d = 2, suf = '') => `<span class="ltr">${(Math.abs(v) < 0.5 * 10 ** -d ? 0 : v).toFixed(d)}${suf}</span>`;
+const PCT = (p, d = 1) => N(100 * p, d, '%');
+const KEYS = {
+  muA: ['תוחלת מניה A', -15, 30, 0.5, v => v.toFixed(1) + '%'],
+  sA: ['סטיית תקן מניה A', 2, 40, 0.5, v => v.toFixed(1) + '%'],
+  muB: ['תוחלת מניה B', -15, 30, 0.5, v => v.toFixed(1) + '%'],
+  sB: ['סטיית תקן מניה B', 2, 40, 0.5, v => v.toFixed(1) + '%'],
+  rho: ['מקדם מתאם ρ', -1, 1, 0.05, v => f2(v)],
+  f: ['המשקל של A בתיק', 0, 1, 0.01, v => (v * 100).toFixed(0) + '% / ' + ((1 - v) * 100).toFixed(0) + '%'],
+};
+function psl(ctl, k) { const [lab, a, b, st, fm] = KEYS[k]; const s = slider(ctl, lab, a, b, st, PS[k], fm, () => setPS(k, s.v)); PSYNC.push(() => s.set(PS[k])); return s; }
+function btns(ctl) { const bb = document.createElement('div'); bb.className = 'btns'; ctl.appendChild(bb); return bb; }
+function resetBtn(bb) { button(bb, '↺ חזרה לדוגמא', resetPS); }
+Plot.prototype.area = function (fn, a, b, n, fill) { const g = this.g; this.clipBegin(); g.fillStyle = fill; g.beginPath(); g.moveTo(this.X(a), this.Y(0)); for (let i = 0; i <= n; i++) { const x = a + (b - a) * i / n; g.lineTo(this.X(x), this.Y(fn(x))); } g.lineTo(this.X(b), this.Y(0)); g.closePath(); g.fill(); this.clipEnd(); };
+Plot.prototype.dot = function (x, y, r, c, ring) { const g = this.g; g.beginPath(); g.arc(this.X(x), this.Y(y), r, 0, TAU); g.fillStyle = c; g.fill(); if (ring) { g.strokeStyle = ring; g.lineWidth = 2; g.stroke(); } };
+Plot.prototype.text = function (t, x, y, c, al = 'center', bl = 'bottom', font = '12px Heebo, sans-serif') { const g = this.g; g.font = font; g.fillStyle = c; g.textAlign = al; g.textBaseline = bl; g.fillText(t, x, y); };
+Plot.prototype.vline = function (x, c, dash = [4, 4], y0 = this.y0, y1 = this.y1, lw = 1.2) { const g = this.g; this.clipBegin(); g.strokeStyle = c; g.lineWidth = lw; g.setLineDash(dash); g.beginPath(); g.moveTo(this.X(x), this.Y(y0)); g.lineTo(this.X(x), this.Y(y1)); g.stroke(); g.setLineDash([]); this.clipEnd(); };
+Plot.prototype.hline = function (y, c, dash = [4, 4], lw = 1.2) { const g = this.g; this.clipBegin(); g.strokeStyle = c; g.lineWidth = lw; g.setLineDash(dash); g.beginPath(); g.moveTo(this.X(this.x0), this.Y(y)); g.lineTo(this.X(this.x1), this.Y(y)); g.stroke(); g.setLineDash([]); this.clipEnd(); };
+function dragX(P, cb) { // pointer drag along x, returns data x
+  const cv = P.cv; let on = false;
+  const go = e => { const r = cv.getBoundingClientRect(); cb(P.x0 + (e.clientX - r.left - P.m.l) / (P.w - P.m.l - P.m.r) * (P.x1 - P.x0), e.clientY - r.top); };
+  cv.addEventListener('pointerdown', e => { on = true; cv.setPointerCapture(e.pointerId); go(e); });
+  cv.addEventListener('pointermove', e => { if (on) go(e); });
+  cv.addEventListener('pointerup', () => on = false); cv.style.cursor = 'ew-resize';
+}
+const clamp01 = v => Math.max(0, Math.min(1, v));
+const PCOL = C.violet, LOSS = 'rgba(255,122,122,.32)';
+
+// ---------- 1. distributions of the two stocks ----------
+SIMS.dist = root => {
+  const st = +root.dataset.stage || 1;
+  const { cv, ctl, rd } = html(root, 'סימולציה · התפלגות התשואות', L(C.orange, 'מניה A') + L(C.blue, 'מניה B') + (st > 1 ? L('rgba(255,255,255,.25)', 'טווח 68%') + L(LOSS, 'הסתברות להפסד') : ''));
+  const P = new Plot(cv, { l: 16, b: 30 });
+  ['muA', 'sA', 'muB', 'sB'].forEach(k => psl(ctl, k)); resetBtn(btns(ctl));
+  function draw() {
+    P.clear(); const x0 = -60, x1 = 95, pk = 100 * Math.max(pdf(0, 0, PS.sA), pdf(0, 0, PS.sB));
+    P.range(x0, x1, 0, pk * 1.18); P.grid(ticks(x0, x1, 8), [], v => v + '%', fmtN, 'תשואה (%) →', '');
+    const S = [['A', PS.muA, PS.sA, C.orange], ['B', PS.muB, PS.sB, C.blue]];
+    if (st > 1) for (const [, m, s, c] of S) { P.area(x => 100 * pdf(x, m, s), m - s, m + s, 120, c === C.orange ? 'rgba(255,169,77,.10)' : 'rgba(90,169,255,.10)'); P.area(x => 100 * pdf(x, m, s), x0, 0, 200, LOSS); }
+    for (const [n, m, s, c] of S) { P.curve(x => 100 * pdf(x, m, s), x0, x1, 400, c, 2.6); const h = 100 * pdf(m, m, s); P.vline(m, c, [4, 4], 0, h); P.text(n + '  ' + f1(m) + '%', P.X(m), P.Y(h) - 6, c, 'center', 'bottom', '600 13px Heebo'); }
+    P.vline(0, 'rgba(255,255,255,.5)', [], P.y0, P.y1, 1);
+    const row = (lab, fa, fb) => `<tr><td>${lab}</td><td>${fa}</td><td>${fb}</td></tr>`;
+    const rg = (m, s, z) => `<span class="ltr">[${f1(m - z * s)}%, ${f1(m + z * s)}%]</span>`;
+    rd.innerHTML = `<table><tr><th></th><th>מניה A</th><th>מניה B</th></tr>` +
+      row('תוחלת / סטיית תקן', `${N(PS.muA, 1, '%')} / ${N(PS.sA, 1, '%')}`, `${N(PS.muB, 1, '%')} / ${N(PS.sB, 1, '%')}`) +
+      (st > 1 ? row('טווח 68%', rg(PS.muA, PS.sA, 1), rg(PS.muB, PS.sB, 1)) + row('טווח 95%', rg(PS.muA, PS.sA, 1.96), rg(PS.muB, PS.sB, 1.96)) : row('שונות', N(PS.sA ** 2, 0), N(PS.sB ** 2, 0))) +
+      row('הסתברות להפסד P(R&lt;0)', '<b>' + PCT(Phi(-PS.muA / PS.sA)) + '</b>', '<b>' + PCT(Phi(-PS.muB / PS.sB)) + '</b>') + '</table>';
+  }
+  PRED.push(draw); return { draw };
+};
+
+// ---------- 2. cloud of states of the world ----------
+SIMS.cloud = root => {
+  const st = +root.dataset.stage || 1; let seed = 11;
+  const { cv, ctl, rd } = html(root, 'סימולציה · אינסוף מצבי עולם', L(C.blue, 'מצב עולם (R_A, R_B)') + L(C.orange, 'התוחלת') + (st > 1 ? L('rgba(79,209,161,.45)', 'המניות נעות בכיוונים מנוגדים') : ''));
+  const P = new Plot(cv, { l: 46, b: 30 });
+  psl(ctl, 'rho'); const nS = slider(ctl, 'מספר מצבי עולם', 50, 3000, 50, 300, v => v.toFixed(0), draw);
+  const bb = btns(ctl); button(bb, '↻ הגרלה חדשה', () => { seed++; draw(); }); resetBtn(bb);
+  function draw() {
+    P.clear(); const ax = [PS.muA - 3.2 * PS.sA, PS.muA + 3.2 * PS.sA], ay = [PS.muB - 3.2 * PS.sB, PS.muB + 3.2 * PS.sB];
+    P.range(ax[0], ax[1], ay[0], ay[1]); P.grid(ticks(ax[0], ax[1], 7), ticks(ay[0], ay[1], 5), v => v + '%', v => v + '%', 'R_A →', 'R_B');
+    const g = P.g;
+    if (st > 1) { g.fillStyle = 'rgba(79,209,161,.10)'; P.clipBegin(); g.fillRect(P.X(ax[0]), P.Y(ay[1]), P.X(0) - P.X(ax[0]), P.Y(0) - P.Y(ay[1])); g.fillRect(P.X(0), P.Y(0), P.X(ax[1]) - P.X(0), P.Y(ay[0]) - P.Y(0)); P.clipEnd();
+      P.text('A יורדת, B עולה', P.X(ax[0]) + 8, P.Y(ay[1]) + 6, C.green, 'left', 'top', '600 12px Heebo'); P.text('A עולה, B יורדת', P.X(ax[1]) - 8, P.Y(ay[0]) - 6, C.green, 'right', 'bottom', '600 12px Heebo'); }
+    P.vline(0, 'rgba(255,255,255,.45)', [], P.y0, P.y1, 1); P.hline(0, 'rgba(255,255,255,.45)', [], 1);
+    const n = nS.v, d = draws(n, seed); let opp = 0, ma = 0, mb = 0, sab = 0, sa = 0, sb = 0;
+    P.clipBegin(); g.fillStyle = 'rgba(90,169,255,.55)';
+    for (let i = 0; i < n; i++) { const a = d.A[i], b = d.B[i]; g.beginPath(); g.arc(P.X(a), P.Y(b), n > 1000 ? 1.4 : 2, 0, TAU); g.fill(); if (a * b < 0) opp++; ma += a; mb += b; }
+    P.clipEnd(); ma /= n; mb /= n; for (let i = 0; i < n; i++) { sab += (d.A[i] - ma) * (d.B[i] - mb); sa += (d.A[i] - ma) ** 2; sb += (d.B[i] - mb) ** 2; }
+    P.dot(PS.muA, PS.muB, 6, C.orange, '#1a1205');
+    const r = sab / Math.sqrt(sa * sb);
+    rd.innerHTML = `מקדם מתאם במדגם: <b>${N(r, 3)}</b> (בהתפלגות: ${N(PS.rho, 2)}) · ${n} מצבי עולם` +
+      (st > 1 ? `<br>שיעור מצבי העולם ה״מקזזים״: במדגם <b>${PCT(opp / n)}</b>, בתאוריה <b>${PCT(pOpposite())}</b>` : `<br>תוחלות במדגם: A = ${N(ma, 1, '%')}, B = ${N(mb, 1, '%')} (בהתפלגות ${N(PS.muA, 1, '%')}, ${N(PS.muB, 1, '%')})`);
+  }
+  PRED.push(draw); return { draw };
+};
+
+// ---------- 3. a linear combination of jointly-normal returns is normal ----------
+SIMS.lincomb = root => {
+  let seed = 5;
+  const { cv, ctl, rd } = html(root, 'סימולציה · מונטה קרלו של תשואת התיק', L('rgba(195,166,255,.55)', 'היסטוגרמה של R_P במדגם') + L(C.ink, 'N(E(R_P), Var(R_P)) – תאוריה'));
+  const P = new Plot(cv, { l: 16, b: 30 });
+  psl(ctl, 'f'); psl(ctl, 'rho'); const nS = slider(ctl, 'מספר מצבי עולם', 200, 20000, 200, 5000, v => v.toFixed(0), draw);
+  const bb = btns(ctl); button(bb, '↻ הגרלה חדשה', () => { seed++; draw(); }); resetBtn(bb);
+  function draw() {
+    P.clear(); const q = port(PS.f), n = nS.v, d = draws(n, seed), x0 = -60, x1 = 95, bw = 2.5, nb = Math.round((x1 - x0) / bw), H = new Float64Array(nb);
+    let m = 0, s2 = 0, neg = 0; const R = new Float64Array(n);
+    for (let i = 0; i < n; i++) { const r = PS.f * d.A[i] + (1 - PS.f) * d.B[i]; R[i] = r; m += r; if (r < 0) neg++; const k = Math.floor((r - x0) / bw); if (k >= 0 && k < nb) H[k]++; }
+    m /= n; for (let i = 0; i < n; i++) s2 += (R[i] - m) ** 2; const sd = Math.sqrt(s2 / (n - 1));
+    const th = x => 100 * pdf(x, q.mu, Math.max(q.sd, 1e-6)); let ymax = 0; for (let k = 0; k < nb; k++) ymax = Math.max(ymax, 100 * H[k] / (n * bw));
+    ymax = Math.max(ymax, q.sd > 0.6 ? th(q.mu) : 0) * 1.12;
+    P.range(x0, x1, 0, ymax); P.grid(ticks(x0, x1, 8), [], v => v + '%', fmtN, 'תשואת התיק (%) →', '');
+    const g = P.g; P.clipBegin();
+    for (let k = 0; k < nb; k++) { const a = x0 + k * bw, h = 100 * H[k] / (n * bw); g.fillStyle = a < 0 ? 'rgba(255,122,122,.45)' : 'rgba(195,166,255,.45)'; g.fillRect(P.X(a) + .5, P.Y(h), P.X(a + bw) - P.X(a) - 1, P.Y(0) - P.Y(h)); }
+    P.clipEnd(); if (q.sd > 0.6) P.curve(th, x0, x1, 400, C.ink, 2.2); P.vline(0, 'rgba(255,255,255,.5)', [], P.y0, P.y1, 1);
+    rd.innerHTML = `<table><tr><th></th><th>במדגם</th><th>בתאוריה</th></tr>
+      <tr><td>תוחלת</td><td>${N(m, 2, '%')}</td><td><b>${N(q.mu, 2, '%')}</b></td></tr>
+      <tr><td>סטיית תקן</td><td>${N(sd, 2, '%')}</td><td><b>${N(q.sd, 2, '%')}</b></td></tr>
+      <tr><td>P(R_P&lt;0)</td><td>${PCT(neg / n)}</td><td><b>${PCT(ploss(q.mu, q.sd))}</b></td></tr></table>`;
+  }
+  PRED.push(draw); return { draw };
+};
+
+// ---------- 4. expected return and SD as functions of the weight ----------
+SIMS.weights = root => {
+  const st = +root.dataset.stage || 1;
+  const { cv, ctl, rd } = html(root, st == 1 ? 'סימולציה · תוחלת לפי משקל' : 'סימולציה · ״הערסל״ – סטיית תקן לפי משקל',
+    st == 1 ? L(C.ink, 'E(R_P)') + L(C.violet, 'התיק שלכם (גררו)') : L(C.ink, 'סטיית תקן של התיק') + L(C.grey, 'ממוצע משוקלל של סטיות התקן') + L(C.blue, 'תיק השונות המינימלית') + L(C.violet, 'התיק שלכם (גררו)'));
+  const P = new Plot(cv, { l: 46, b: 34 });
+  psl(ctl, 'f'); if (st > 1) psl(ctl, 'rho'); resetBtn(btns(ctl));
+  dragX(P, x => setPS('f', Math.round(clamp01(x) * 100) / 100));
+  function draw() {
+    P.clear(); const q = port(PS.f);
+    if (st == 1) {
+      const lo = Math.min(0, PS.muA, PS.muB), hi = Math.max(PS.muA, PS.muB, 1);
+      P.range(0, 1, lo - 1, hi * 1.15 + 1); P.grid(ticks(0, 1, 10), ticks(lo, hi * 1.15, 5), v => (v * 100).toFixed(0) + '%', v => v + '%', 'המשקל של מניה A בתיק →', 'תוחלת (%)');
+      P.curve(f => port(f).mu, 0, 1, 2, C.ink, 2.4);
+      for (const f of [0, .3, .5, .7, 1]) { const m = port(f).mu; P.dot(f, m, 4, C.orange); P.text(f1(m), P.X(f), P.Y(m) - 8, C.orange, f == 1 ? 'right' : f == 0 ? 'left' : 'center'); }
+      P.vline(PS.f, C.violet, [3, 3]); P.dot(PS.f, q.mu, 7, C.violet, '#1a1205');
+      rd.innerHTML = `<span class="ltr">E(R<sub>P</sub>) = ${f2(PS.f)}·${f1(PS.muA)} + ${f2(1 - PS.f)}·${f1(PS.muB)} = <b>${f2(q.mu)}%</b></span><br>הקשר לינארי במשקל – בלי קשר למקדם המתאם ולצורת ההתפלגות.`;
+    } else {
+      const hi = Math.max(PS.sA, PS.sB) * 1.1, fm = fmin(), qm = port(fm), wav = PS.f * PS.sA + (1 - PS.f) * PS.sB;
+      P.range(0, 1, 0, hi); P.grid(ticks(0, 1, 10), ticks(0, hi, 5), v => (v * 100).toFixed(0) + '%', v => v + '%', 'המשקל של מניה A בתיק →', 'סטיית תקן (%)');
+      P.curve(f => f * PS.sA + (1 - f) * PS.sB, 0, 1, 2, C.grey, 1.5, [6, 5]);
+      P.curve(f => port(f).sd, 0, 1, 300, C.ink, 2.6);
+      P.dot(fm, qm.sd, 6, C.blue); P.text(f2(qm.sd), P.X(fm), P.Y(qm.sd) + 10, C.blue, 'center', 'top');
+      P.vline(PS.f, C.violet, [3, 3]); P.g.strokeStyle = 'rgba(79,209,161,.9)'; P.g.lineWidth = 3; P.g.beginPath(); P.g.moveTo(P.X(PS.f), P.Y(wav)); P.g.lineTo(P.X(PS.f), P.Y(q.sd)); P.g.stroke();
+      P.dot(PS.f, q.sd, 7, C.violet, '#1a1205');
+      rd.innerHTML = `סטיית התקן של התיק <b>${N(q.sd, 2, '%')}</b>, הממוצע המשוקלל ${N(wav, 2, '%')} · <span style="color:${C.green}">רווח מביזור ${N(wav - q.sd, 2, '%')}</span>` +
+        `<br>תיק השונות המינימלית: f<sub>A</sub>* = <b>${N(fm, 4)}</b>, סטיית תקן <b>${N(qm.sd, 2, '%')}</b>, תוחלת ${N(qm.mu, 2, '%')}`;
+    }
+  }
+  PRED.push(draw); return { draw };
+};
+
+// ---------- 5. portfolio distribution vs. the stocks ----------
+SIMS.portfolio = root => {
+  const st = +root.dataset.stage || 1;
+  const { cv, ctl, rd } = html(root, st == 1 ? 'סימולציה · שונות התיק' : 'סימולציה · הסתברות להפסד', L(C.orange, 'מניה A') + L(C.blue, 'מניה B') + L(PCOL, 'התיק') + (st > 1 ? L(LOSS, 'R < 0') : ''));
+  const P = new Plot(cv, { l: 16, b: 30 });
+  psl(ctl, 'f'); psl(ctl, 'rho'); resetBtn(btns(ctl));
+  function draw() {
+    P.clear(); const q = port(PS.f), x0 = -60, x1 = 95, sdp = Math.max(q.sd, 0.8);
+    P.range(x0, x1, 0, 100 * Math.max(pdf(0, 0, PS.sA), pdf(0, 0, PS.sB), pdf(0, 0, Math.max(sdp, 6))) * 1.15);
+    P.grid(ticks(x0, x1, 8), [], v => v + '%', fmtN, 'תשואה (%) →', '');
+    const fp = x => 100 * pdf(x, q.mu, sdp);
+    if (st > 1) { P.area(x => 100 * pdf(x, PS.muA, PS.sA), x0, 0, 200, 'rgba(255,169,77,.16)'); P.area(x => 100 * pdf(x, PS.muB, PS.sB), x0, 0, 200, 'rgba(90,169,255,.16)'); P.area(fp, x0, 0, 300, LOSS); }
+    P.curve(x => 100 * pdf(x, PS.muA, PS.sA), x0, x1, 300, C.orange, 1.6, [6, 4]);
+    P.curve(x => 100 * pdf(x, PS.muB, PS.sB), x0, x1, 300, C.blue, 1.6, [6, 4]);
+    P.curve(fp, x0, x1, 600, PCOL, 3);
+    P.vline(0, 'rgba(255,255,255,.5)', [], P.y0, P.y1, 1);
+    const pk = fp(q.mu); P.text('התיק ' + (PS.f * 100).toFixed(0) + '/' + ((1 - PS.f) * 100).toFixed(0), P.X(q.mu + sdp * 0.9) + 6, Math.max(P.Y(fp(q.mu + sdp * 0.9)), P.m.t + 14), PCOL, 'left', 'bottom', '600 13px Heebo');
+    const fa = PS.f, fb = 1 - PS.f;
+    if (st == 1) rd.innerHTML = `<span class="ltr">Var = ${f2(fa)}²·${PS.sA ** 2} + 2·${f2(fa)}·${f2(fb)}·(${f1(q.cov)}) + ${f2(fb)}²·${PS.sB ** 2}</span>` +
+      `<br><span class="ltr">= ${f2(fa * fa * PS.sA ** 2)} + (${f2(2 * fa * fb * q.cov)}) + ${f2(fb * fb * PS.sB ** 2)} = <b>${f2(q.v)}</b> → SD = <b>${f2(q.sd)}%</b></span>` +
+      `<br>ולכן <span class="ltr">R<sub>P</sub> ~ N(${f2(q.mu)}%, (${f2(q.sd)}%)²)</span>`;
+    else { const pa = Phi(-PS.muA / PS.sA), pb = Phi(-PS.muB / PS.sB), pp = ploss(q.mu, q.sd);
+      rd.innerHTML = `<table><tr><th></th><th>מניה A</th><th>מניה B</th><th>התיק</th></tr><tr><td>P(R&lt;0)</td><td>${PCT(pa)}</td><td>${PCT(pb)}</td><td><b>${PCT(pp)}</b></td></tr></table>` +
+        (pp < Math.min(pa, pb) ? `<span style="color:${C.green}">ההסתברות להפסד בתיק נמוכה מזו של כל אחת מהמניות.</span>` : `P(R_P&lt;0) = Φ(${N(-q.mu / Math.max(q.sd, 1e-9), 3)})`); }
+  }
+  PRED.push(draw); return { draw };
+};
+
+// ---------- 6. mean–SD space, and the correlation animation ----------
+SIMS.frontier = root => {
+  const st = +root.dataset.stage || 1; let timer = null;
+  const { cv, ctl, rd } = html(root, st == 1 ? 'סימולציה · המרחב סטיית תקן–תוחלת' : 'סימולציה · תיקים כפונקציה של מקדם המתאם',
+    (st == 1 ? L(C.orange, 'החזית היעילה') + L(C.grey, 'תיקים נשלטים') + L(C.ink, 'קפיצות של 10%') : L(C.orange, 'מקדם המתאם הנוכחי') + L('rgba(255,255,255,.25)', 'ρ = 1, 0.8, …, ‎−1')) + L(C.blue, 'שונות מינימלית') + L(C.violet, 'התיק שלכם (גררו)'));
+  const P = new Plot(cv, { l: 50, b: 34 });
+  psl(ctl, 'rho'); psl(ctl, 'f');
+  const bb = btns(ctl);
+  if (st > 1) { const ab = button(bb, '▶ הנפשה של ρ מ־1 עד ‎−1', () => {
+    if (timer) { clearInterval(timer); timer = null; ab.classList.remove('on'); ab.textContent = '▶ הנפשה של ρ מ־1 עד ‎−1'; return; }
+    ab.classList.add('on'); ab.textContent = '❚❚ עצירה'; let r = 1; setPS('rho', 1);
+    timer = setInterval(() => { r = Math.round((r - 0.05) * 100) / 100; if (r < -1) { clearInterval(timer); timer = null; ab.classList.remove('on'); ab.textContent = '▶ הנפשה של ρ מ־1 עד ‎−1'; return; } setPS('rho', r); }, 140); }); }
+  resetBtn(bb);
+  // drag: nearest weight on the curve
+  let on = false; const pick = e => { const r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top; let best = 0, bd = 1e9; for (let i = 0; i <= 200; i++) { const q = port(i / 200), dd = (P.X(q.sd) - mx) ** 2 + (P.Y(q.mu) - my) ** 2; if (dd < bd) { bd = dd; best = i / 200; } } setPS('f', Math.round(best * 100) / 100); };
+  cv.addEventListener('pointerdown', e => { on = true; cv.setPointerCapture(e.pointerId); pick(e); }); cv.addEventListener('pointermove', e => { if (on) pick(e); }); cv.addEventListener('pointerup', () => on = false); cv.style.cursor = 'pointer';
+  function path(p, color, lw, dash, a = 0, b = 1) { const g = P.g; P.clipBegin(); g.strokeStyle = color; g.lineWidth = lw; g.setLineDash(dash); g.beginPath(); for (let i = 0; i <= 300; i++) { const f = a + (b - a) * i / 300, q = port(f, p); i ? g.lineTo(P.X(q.sd), P.Y(q.mu)) : g.moveTo(P.X(q.sd), P.Y(q.mu)); } g.stroke(); g.setLineDash([]); P.clipEnd(); }
+  function draw() {
+    P.clear(); const xm = Math.max(PS.sA, PS.sB) * 1.2, lo = Math.min(0, PS.muA, PS.muB), hi = Math.max(PS.muA, PS.muB, 1) * 1.15;
+    P.range(0, xm, lo, hi); P.grid(ticks(0, xm, 6), ticks(lo, hi, 5), v => v + '%', v => v + '%', 'סטיית תקן (%) →', 'תוחלת תשואה (%)');
+    const fm = fmin(), qm = port(fm), hiA = PS.muA >= PS.muB;
+    if (st > 1) { for (let k = 0; k <= 10; k++) path(Object.assign({}, PS, { rho: 1 - 0.2 * k }), 'rgba(255,255,255,.16)', 1.3, []); path(PS, C.orange, 3.2, []); }
+    else { path(PS, C.grey, 1.8, [6, 4], hiA ? 0 : fm, hiA ? fm : 1); path(PS, C.orange, 3.2, [], hiA ? fm : 0, hiA ? 1 : fm); for (let k = 1; k < 10; k++) { const q = port(k / 10); P.dot(q.sd, q.mu, 3, C.ink); } }
+    P.dot(qm.sd, qm.mu, 6, C.blue);
+    P.dot(PS.sA, PS.muA, 6, C.orange); P.text('A', P.X(PS.sA) + 9, P.Y(PS.muA), C.orange, 'left', 'middle', '700 14px Heebo');
+    P.dot(PS.sB, PS.muB, 6, C.orange); P.text('B', P.X(PS.sB) + 9, P.Y(PS.muB), C.orange, 'left', 'middle', '700 14px Heebo');
+    const q = port(PS.f); P.dot(q.sd, q.mu, 7, C.violet, '#1a1205');
+    if (st > 1) P.text('ρ = ' + f2(PS.rho), P.X(xm * 0.04), P.Y(hi) + 8, C.ink, 'left', 'top', '600 18px JetBrains Mono');
+    let extra = '';
+    if (PS.rho <= -0.999) extra = `<br>ρ = ‎−1: התיק <b>חסר סיכון</b> ב־f<sub>A</sub> = σ<sub>B</sub>/(σ<sub>A</sub>+σ<sub>B</sub>) = ${N(fm, 3)}, ותשואתו <b>${N(qm.mu, 2, '%')}</b>`;
+    else if (PS.rho >= 0.999) extra = '<br>ρ = 1: קו ישר בין A ל־B – <b>אין תועלת מביזור</b>.';
+    rd.innerHTML = `התיק שלכם (${(PS.f * 100).toFixed(0)}% A): תוחלת <b>${N(q.mu, 2, '%')}</b>, סטיית תקן <b>${N(q.sd, 2, '%')}</b>` +
+      `<br>שונות מינימלית: f<sub>A</sub>* = ${N(fm, 4)}, σ = <b>${N(qm.sd, 2, '%')}</b>, E = ${N(qm.mu, 2, '%')}` + extra;
+  }
+  PRED.push(draw); return { draw };
+};
+
+// ---------- 7. beyond: probability of loss vs weight ----------
+SIMS.lossmap = root => {
+  const { cv, ctl, rd } = html(root, 'סימולציה · הסתברות להפסד לפי משקל', L(C.orange, 'ρ נוכחי') + L(C.grey, 'ρ = 1') + L(C.green, 'ρ = ‎−1') + L(C.red, 'max(P_A, P_B)') + L(C.violet, 'התיק שלכם (גררו)'));
+  const P = new Plot(cv, { l: 50, b: 34 });
+  psl(ctl, 'rho'); psl(ctl, 'f'); psl(ctl, 'muA'); psl(ctl, 'muB'); resetBtn(btns(ctl));
+  dragX(P, x => setPS('f', Math.round(clamp01(x) * 100) / 100));
+  const pl = (f, p) => { const q = port(f, p); return ploss(q.mu, q.sd); };
+  function draw() {
+    P.clear(); const pa = Phi(-PS.muA / PS.sA), pb = Phi(-PS.muB / PS.sB);
+    let hi = Math.max(pa, pb); for (let i = 0; i <= 100; i++) hi = Math.max(hi, pl(i / 100, PS)); hi = Math.min(1, hi * 1.15 + 0.02);
+    P.range(0, 1, 0, hi); P.grid(ticks(0, 1, 10), ticks(0, hi, 5), v => (v * 100).toFixed(0) + '%', v => (v * 100).toFixed(0) + '%', 'המשקל של מניה A בתיק →', 'P(R_P < 0)');
+    P.hline(Math.max(pa, pb), C.red, [5, 4], 1.4);
+    P.curve(f => pl(f, Object.assign({}, PS, { rho: 1 })), 0, 1, 300, C.grey, 1.6, [6, 4]);
+    P.curve(f => pl(f, Object.assign({}, PS, { rho: -1 })), 0, 1, 600, C.green, 1.4, [3, 3]);
+    P.curve(f => pl(f, PS), 0, 1, 400, C.orange, 3);
+    let bf = 0, bv = 2, wf = 0, wv = -1; for (let i = 0; i <= 1000; i++) { const v = pl(i / 1000, PS); if (v < bv) { bv = v; bf = i / 1000; } if (v > wv) { wv = v; wf = i / 1000; } }
+    P.dot(bf, bv, 5, C.blue); const cur = pl(PS.f, PS); P.vline(PS.f, C.violet, [3, 3]); P.dot(PS.f, cur, 7, C.violet, '#1a1205');
+    const qb = port(bf), qc = port(PS.f), bad = wv > Math.max(pa, pb) + 1e-6;
+    rd.innerHTML = `בתיק שלכם: P(R<sub>P</sub>&lt;0) = <b>${PCT(cur)}</b> (A: ${PCT(pa)}, B: ${PCT(pb)})` +
+      `<br>ההסתברות להפסד <b>מינימלית</b> ב־f<sub>A</sub> = <b>${N(bf, 3)}</b>: ${PCT(bv)} — שם היחס E/σ מקסימלי (${N(qb.mu / Math.max(qb.sd, 1e-9), 3)})` +
+      (bad ? `<div class="warn">כאן התיק גרוע משתי המניות (עד ${PCT(wv)}) – זה קורה רק כשתוחלת התיק שלילית (${N(port(wf).mu, 2, '%')}).</div>` : `<br><span style="color:${C.green}">לכל משקל, ההסתברות להפסד בתיק אינה עולה על הגבוהה מבין שתי המניות.</span>`);
+  }
+  PRED.push(draw); return { draw };
+};
+
+// ---------- 8. beyond: n equally weighted stocks ----------
+SIMS.nstocks = root => {
+  const { cv, ctl, rd } = html(root, 'סימולציה · ביזור על פני n מניות', L(C.orange, 'סטיית התקן של התיק') + L(C.grey, 'ρ = 0') + L(C.red, 'הגבול σ√ρ – סיכון שלא ניתן לבזר'));
+  const P = new Plot(cv, { l: 46, b: 34 });
+  const sS = slider(ctl, 'סטיית התקן של כל מניה', 5, 50, 1, 25, v => v + '%', draw), rS = slider(ctl, 'מקדם מתאם בין כל שתי מניות', 0, 1, 0.01, 0.2, v => f2(v), draw), nS = slider(ctl, 'מספר המניות בתיק', 1, 60, 1, 10, v => v.toFixed(0), draw);
+  const sd = (n, s, r) => s * Math.sqrt(1 / n + (1 - 1 / n) * r);
+  dragX(P, x => { nS.set(Math.max(1, Math.min(60, Math.round(x)))); draw(); });
+  function draw() {
+    P.clear(); const s = sS.v, r = rS.v, n = nS.v; P.range(0, 61, 0, s * 1.1); P.grid(ticks(0, 60, 6), ticks(0, s * 1.1, 5), fmtN, v => v + '%', 'מספר המניות n →', 'סטיית תקן (%)');
+    P.curve(k => sd(Math.max(k, 1), s, 0), 1, 60, 300, C.grey, 1.5, [6, 4]); P.hline(s * Math.sqrt(r), C.red, [5, 4], 1.5);
+    for (let k = 1; k <= 60; k++) P.dot(k, sd(k, s, r), 2.4, C.orange);
+    P.vline(n, C.violet, [3, 3]); P.dot(n, sd(n, s, r), 7, C.violet, '#1a1205');
+    const v = sd(n, s, r) ** 2, sys = r * s * s;
+    rd.innerHTML = `n = ${n}: סטיית תקן <b>${N(sd(n, s, r), 2, '%')}</b> · n = 2: ${N(sd(2, s, r), 2, '%')} · n → ∞: <b>${N(s * Math.sqrt(r), 2, '%')}</b>` +
+      `<br>החלק שלא ניתן לבזר (ρσ²): <b>${PCT(sys / v)}</b> מהשונות`;
+  }
+  return { draw };
+};
+
+const objs = [];
+document.querySelectorAll('[data-sim]').forEach(el => { const o = SIMS[el.dataset.sim](el); objs.push(o); new ResizeObserver(() => o.draw()).observe(el); });
+const slides = [...document.querySelectorAll('.slide')], dots = $('#dots'), count = $('#count'); let cur = 0;
+slides.forEach((_, i) => { const d = document.createElement('span'); d.onclick = () => show(i); dots.appendChild(d); });
+function upd() { slides.forEach((s, k) => s.classList.toggle('active', k === cur)); [...dots.children].forEach((d, i) => d.classList.toggle('a', i === cur)); count.textContent = (cur + 1) + ' / ' + slides.length; try { history.replaceState(null, '', '#slide-' + (cur + 1)); } catch (e) {} }
+function show(i) { cur = Math.max(0, Math.min(slides.length - 1, i)); upd(); }
+$('#prev').onclick = () => show(cur - 1); $('#next').onclick = () => show(cur + 1);
+addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; const k = e.key; if (k === 'ArrowRight' || k === 'PageDown') show(cur + 1); else if (k === 'ArrowLeft' || k === 'PageUp') show(cur - 1); else if (k === 'Home') show(0); else if (k === 'End') show(slides.length - 1); });
+let tx = null; addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+addEventListener('touchend', e => { if (tx === null || e.target.tagName === 'CANVAS' || e.target.tagName === 'INPUT') { tx = null; return; } const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 60) show(cur + (dx < 0 ? 1 : -1)); tx = null; });
+function fromHash() { const m = /slide-(\d+)/.exec(location.hash); show(m ? +m[1] - 1 : 0); }
+addEventListener('hashchange', fromHash);
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => requestAnimationFrame(() => { fromHash(); objs.forEach(o => o.draw()); }));
+
+
+</script></body></html>
